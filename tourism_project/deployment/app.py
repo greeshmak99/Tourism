@@ -8,12 +8,14 @@ from huggingface_hub import hf_hub_download
 # 1. Load Model from Hugging Face Model Hub
 # ============================================================
 
-MODEL_REPO = "Quantum9999/Tourism-Package-Prediction"
+MODEL_REPO_ID = "Quantum9999/Tourism-Package-Prediction-Model" # Corrected to the new model repo ID
+DATASET_REPO_ID = "Quantum9999/Tourism-Package-Prediction" # Repo where preprocessor is stored
 MODEL_FILENAME = "xgb_model.pkl"
 
 @st.cache_resource
 def load_model():
-    model_path = hf_hub_download(repo_id=MODEL_REPO, filename=MODEL_FILENAME, repo_type="model")
+    # Download the model from the MODEL_REPO_ID with repo_type="model"
+    model_path = hf_hub_download(repo_id=MODEL_REPO_ID, filename=MODEL_FILENAME, repo_type="model")
     model = joblib.load(model_path)
     return model
 
@@ -96,8 +98,8 @@ categorical_features = [
     'Passport', 'OwnCar', 'Designation', 'ProductPitched'
 ]
 
-# Load preprocessors (generated in prep.py)
-preprocessor_path = hf_hub_download(repo_id=MODEL_REPO, filename="preprocessing_pipeline.pkl", repo_type="model")
+# Load preprocessors (generated in prep.py) from the DATASET_REPO_ID
+preprocessor_path = hf_hub_download(repo_id=DATASET_REPO_ID, filename="preprocessing_pipeline.pkl", repo_type="dataset")
 preprocessor = joblib.load(preprocessor_path)
 
 processed_user_data = preprocessor.transform(user_data)
@@ -116,4 +118,3 @@ if st.button("Predict"):
         st.success(f" Customer is LIKELY to purchase the Wellness Tourism Package! (Confidence: {proba:.2f})")
     else:
         st.error(f" Customer is NOT likely to purchase the package. (Confidence: {proba:.2f})")
-
