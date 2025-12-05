@@ -86,6 +86,11 @@ if "Gender" in df.columns:
 if "CustomerID" in df.columns:
     df.drop(columns=["CustomerID"], inplace=True)
 
+# Combine unmarried and single  in MaritalStatus
+if "MaritalStatus" in df.columns:
+    df["MaritalStatus"] = df["MaritalStatus"].replace({"Unmarried": "Single"})
+    print("Combined 'Unmarried' into 'Single' in MaritalStatus.")
+
 
 # ============================================================
 # STEP 3: FEATURE DEFINITIONS
