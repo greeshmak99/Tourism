@@ -120,7 +120,7 @@ numeric_transformer = Pipeline(steps=[
 
 categorical_transformer = Pipeline(steps=[
     ("imputer", SimpleImputer(strategy="most_frequent")),
-    ("encoder", OneHotEncoder(handle_unknown="ignore"))
+    ("encoder", OneHotEncoder(handle_unknown="ignore",sparse_output=False))
 ])
 
 preprocessor = ColumnTransformer(
@@ -147,7 +147,7 @@ ohe_features = pipeline.named_steps["preprocessor"] \
 
 processed_feature_names = numerical_features + list(ohe_features)
 
-X_processed_df = pd.DataFrame(X_processed.toarray(), columns=processed_feature_names)
+X_processed_df = pd.DataFrame(X_processed, columns=processed_feature_names)
 
 
 # ============================================================
