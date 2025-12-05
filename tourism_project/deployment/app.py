@@ -48,7 +48,7 @@ def user_input_form():
     TypeofContact = st.selectbox("Type of Contact", ["Company Invited", "Self Enquiry"])
     Occupation = st.selectbox("Occupation", ["Salaried", "Self Employed", "Small Business", "Large Business", "Free Lancer"])
     Gender = st.selectbox("Gender", ["Male", "Female"])
-    MaritalStatus = st.selectbox("Marital Status", ["Married", "Single", "Divorced", "Unmarried"])
+    MaritalStatus = st.selectbox("Marital Status", ["Married", "Single", "Divorced"])
     Passport = st.selectbox("Passport", [0, 1])
     OwnCar = st.selectbox("Owns Car?", [0, 1])
     Designation = st.selectbox("Designation", ["Junior", "Senior", "Manager", "Executive", "Other"])
