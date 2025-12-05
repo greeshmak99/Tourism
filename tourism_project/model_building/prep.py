@@ -30,7 +30,7 @@ from huggingface_hub import HfApi
 
 
 # ========== ENV VARS ==========
-HF_DATASET_REPO_ID = os.getenv("Quantum9999/Tourism-Package-Prediction")     # username/your-dataset-repo
+HF_DATASET_REPO_ID = "Quantum9999/Tourism-Package-Prediction"     # username/your-dataset-repo
 HF_TOKEN = os.getenv("MLOPS_TOKEN")
 RAW_DATA_FILE = "tourism.csv"
 
