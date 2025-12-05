@@ -7,14 +7,16 @@ import mlflow
 import mlflow.sklearn
 import joblib
 import os
-from huggingface_hub import HfApi, login, hf_hub_download
+from huggingface_hub import HfApi, login, hf_hub_download, create_repo
+from huggingface_hub.utils import RepositoryNotFoundError 
 
 # 1. Load Hugging Face Token (from environment variable) and Define Repos
 # ============================================================
 
 HF_TOKEN = os.getenv("MLOPS_TOKEN")     # <-- MUST be set in GitHub Secrets or notebook
 HF_DATASET_REPO_ID = "Quantum9999/Tourism-Package-Prediction" # Repo where processed data is stored
-HF_MODEL_REPO = "Quantum9999/Tourism-Package-Prediction"   # Repo where the trained model will be stored
+
+HF_MODEL_REPO_ID = "Quantum9999/Tourism-Package-Prediction-Model"   # New Repo for the trained model
 
 if HF_TOKEN is None:
     raise ValueError(" ERROR: MLOPS_TOKEN is not set in environment variables!")
@@ -35,7 +37,7 @@ for filename in processed_files:
         hf_hub_download(
             repo_id=HF_DATASET_REPO_ID,
             filename=filename,
-            repo_type="dataset", 
+            repo_type="dataset", # Specify it's a dataset repo
             local_dir="tourism_project/data"
         )
         print(f"Downloaded {filename} to tourism_project/data/")
@@ -144,13 +146,22 @@ with mlflow.start_run():
 
     # 9. Upload Model to Hugging Face Model Hub
     # ========================================================
-    print(f" Uploading model to HF Repo: {HF_MODEL_REPO}")
+    print(f" Uploading model to HF Repo: {HF_MODEL_REPO_ID}")
+
+    # Check if the model repo exists, and create it if not
+    try:
+        api.repo_info(repo_id=HF_MODEL_REPO_ID, repo_type="model")
+        print(f"Model Space '{HF_MODEL_REPO_ID}' already exists. Using it.")
+    except RepositoryNotFoundError:
+        print(f"Model Space '{HF_MODEL_REPO_ID}' not found. Creating new space...")
+        create_repo(repo_id=HF_MODEL_REPO_ID, repo_type="model", private=False)
+        print(f"Model Space '{HF_MODEL_REPO_ID}' created.")
 
     api.upload_file(
         path_or_fileobj=model_path,
         path_in_repo="xgb_model.pkl",
-        repo_id=HF_MODEL_REPO,
-        repo_type="model"
+        repo_id=HF_MODEL_REPO_ID,
+        repo_type="model" # 
     )
 
 print(" Training Completed & Model Uploaded to Hugging Face!")
