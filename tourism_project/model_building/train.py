@@ -7,13 +7,14 @@ import mlflow
 import mlflow.sklearn
 import joblib
 import os
-from huggingface_hub import HfApi, login
+from huggingface_hub import HfApi, login, hf_hub_download
 
-# 1. Load Hugging Face Token (from environment variable)
+# 1. Load Hugging Face Token (from environment variable) and Define Repos
 # ============================================================
 
 HF_TOKEN = os.getenv("MLOPS_TOKEN")     # <-- MUST be set in GitHub Secrets or notebook
-HF_MODEL_REPO = "Quantum9999/Tourism-Package-Prediction"   # <-- your HF model repo
+HF_DATASET_REPO_ID = "Quantum9999/Tourism-Package-Prediction" # Repo where processed data is stored
+HF_MODEL_REPO = "Quantum9999/Tourism-Package-Prediction"   # Repo where the trained model will be stored
 
 if HF_TOKEN is None:
     raise ValueError(" ERROR: MLOPS_TOKEN is not set in environment variables!")
@@ -22,10 +23,31 @@ if HF_TOKEN is None:
 login(token=HF_TOKEN)
 api = HfApi(token=HF_TOKEN)
 
-# 2. Load Processed Data (created by prep.py)
+# Ensure local data folder exists for processed data
+os.makedirs("tourism_project/data", exist_ok=True)
+
+# 2. Download Processed Data from Hugging Face Hub
+# ============================================================
+print("Downloading processed datasets from Hugging Face Hub...")
+processed_files = ["X_train.csv", "X_test.csv", "y_train.csv", "y_test.csv", "preprocessing_pipeline.pkl"]
+for filename in processed_files:
+    try:
+        hf_hub_download(
+            repo_id=HF_DATASET_REPO_ID,
+            filename=filename,
+            repo_type="dataset", 
+            local_dir="tourism_project/data"
+        )
+        print(f"Downloaded {filename} to tourism_project/data/")
+    except Exception as e:
+        print(f"Error downloading {filename} from Hugging Face Hub: {e}")
+        raise # Re-raise the exception to fail the job if download fails
+
+
+# 3. Load Processed Data (now available locally)
 # ============================================================
 
-print(" Loading processed datasets...")
+print(" Loading processed datasets locally...")
 
 X_train = pd.read_csv("tourism_project/data/X_train.csv")
 X_test  = pd.read_csv("tourism_project/data/X_test.csv")
@@ -35,7 +57,7 @@ y_test  = pd.read_csv("tourism_project/data/y_test.csv")["ProdTaken"]
 print(" Data loaded successfully!")
 
 
-# 3. Handle Class Imbalance
+# 4. Handle Class Imbalance
 # ============================================================
 
 neg = (y_train == 0).sum()
@@ -45,13 +67,13 @@ scale_pos_weight = neg / pos
 print(f" Class imbalance ratio: {scale_pos_weight}")
 
 
-# 4. MLflow Configuration
+# 5. MLflow Configuration
 # ============================================================
 
 mlflow.set_experiment("Tourism_Package_ProdTaken")
 
 
-# 5. Define XGBoost Model + Hyperparameter Grid
+# 6. Define XGBoost Model + Hyperparameter Grid
 # ============================================================
 
 xgb = XGBClassifier(
@@ -79,7 +101,7 @@ grid = GridSearchCV(
 )
 
 
-# 6. TRAINING + MLflow Logging
+# 7. TRAINING + MLflow Logging
 # ============================================================
 
 print(" Training started...")
@@ -109,7 +131,7 @@ with mlflow.start_run():
     mlflow.log_metric("accuracy", acc)
 
 
-    # 7. Save Model Locally
+    # 8. Save Model Locally
     # ========================================================
     os.makedirs("tourism_project/final_model", exist_ok=True)
     model_path = "tourism_project/final_model/xgb_model.pkl"
@@ -120,7 +142,7 @@ with mlflow.start_run():
     print(f" Model saved: {model_path}")
 
 
-    # 8. Upload Model to Hugging Face Model Hub
+    # 9. Upload Model to Hugging Face Model Hub
     # ========================================================
     print(f" Uploading model to HF Repo: {HF_MODEL_REPO}")
 
